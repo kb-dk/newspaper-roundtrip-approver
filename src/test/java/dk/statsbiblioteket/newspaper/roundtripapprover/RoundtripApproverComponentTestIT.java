@@ -1,15 +1,29 @@
 package dk.statsbiblioteket.newspaper.roundtripapprover;
 
+import dk.statsbiblioteket.doms.central.connectors.BackendInvalidCredsException;
+import dk.statsbiblioteket.doms.central.connectors.BackendInvalidResourceException;
+import dk.statsbiblioteket.doms.central.connectors.BackendMethodFailedException;
+import dk.statsbiblioteket.doms.central.connectors.EnhancedFedora;
+import dk.statsbiblioteket.doms.central.connectors.EnhancedFedoraImpl;
+import dk.statsbiblioteket.doms.central.connectors.fedora.pidGenerator.PIDGeneratorException;
+import dk.statsbiblioteket.doms.webservices.authentication.Credentials;
 import dk.statsbiblioteket.medieplatform.autonomous.Batch;
 import dk.statsbiblioteket.medieplatform.autonomous.ConfigConstants;
 import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorage;
 import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorageFactory;
 import dk.statsbiblioteket.medieplatform.autonomous.Event;
+import dk.statsbiblioteket.medieplatform.autonomous.IDFormatter;
+import dk.statsbiblioteket.medieplatform.autonomous.NewspaperIDFormatter;
 import dk.statsbiblioteket.medieplatform.autonomous.ResultCollector;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import javax.xml.bind.JAXBException;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import static org.testng.Assert.assertFalse;
@@ -17,6 +31,35 @@ import static org.testng.Assert.assertTrue;
 
 
 public class RoundtripApproverComponentTestIT {
+
+    private Properties props;
+    private String batchId = "1337";
+    private DomsEventStorage domsEventStorage;
+
+
+    @AfterMethod
+    @BeforeMethod
+    public void purgeBatch() throws IOException, JAXBException, PIDGeneratorException, BackendInvalidCredsException, BackendMethodFailedException, BackendInvalidResourceException {
+        String pathToProperties = System.getProperty("integration.test.newspaper.properties");
+        props = new Properties();
+        props.load(new FileInputStream(pathToProperties));
+        Credentials creds = new Credentials(props.getProperty(ConfigConstants.DOMS_USERNAME), props.getProperty(ConfigConstants.DOMS_PASSWORD));
+        EnhancedFedoraImpl fedora = new EnhancedFedoraImpl(
+                creds, props.getProperty(ConfigConstants.DOMS_URL).replaceFirst("/(objects)?/?$", ""), "", null);
+        DomsEventStorageFactory factory = new DomsEventStorageFactory();
+        factory.setFedoraLocation(props.getProperty(ConfigConstants.DOMS_URL));
+        factory.setUsername(props.getProperty(ConfigConstants.DOMS_USERNAME));
+        factory.setPassword(props.getProperty(ConfigConstants.DOMS_PASSWORD));
+        factory.setPidGeneratorLocation(props.getProperty(ConfigConstants.DOMS_PIDGENERATOR_URL));
+        domsEventStorage = factory.createDomsEventStorage();
+        String[] objectsToDelete = {"path:B1337", "path:B1337-RT1", "path:B1337-RT2", "path:B1337-RT4", "path:B1337-RT5"};
+        for (String object: objectsToDelete) {
+            List<String> founds = fedora.findObjectFromDCIdentifier(object);
+            if (founds != null && !founds.isEmpty()) {
+                fedora.deleteObject(founds.get(0), "");
+            }
+        }
+    }
 
     /**
         * Create a test setup with a batch with round trips 1,2,4,5 where
@@ -30,19 +73,6 @@ public class RoundtripApproverComponentTestIT {
         */
        @Test(groups = {"externalTest"})
        public void testDoWorkOnBatchIT() throws Exception {
-           String pathToProperties = System.getProperty("integration.test.newspaper.properties");
-           Properties props = new Properties();
-           props.load(new FileInputStream(pathToProperties));
-
-           DomsEventStorageFactory factory = new DomsEventStorageFactory();
-           factory.setFedoraLocation(props.getProperty(ConfigConstants.DOMS_URL));
-           factory.setUsername(props.getProperty(ConfigConstants.DOMS_USERNAME));
-           factory.setPassword(props.getProperty(ConfigConstants.DOMS_PASSWORD));
-           factory.setPidGeneratorLocation(props.getProperty(ConfigConstants.DOMS_PIDGENERATOR_URL));
-
-           DomsEventStorage domsEventStorage = factory.createDomsEventStorage();
-
-           String batchId = getRandomBatchId();
            String dataReceived = "Data_Received";
            String manualQAFlagged = "Manual_QA_Flagged";
            String mfpakApproved = "Approved";
@@ -86,10 +116,6 @@ public class RoundtripApproverComponentTestIT {
            }
            assertFalse(resultCollector.isSuccess());
            assertTrue(isStopped, "Should have found a Manually_Stopped event.");
-       }
-
-       private String getRandomBatchId() {
-           return "4000220" + Math.round(Math.random() * 100000);
        }
 
 }
