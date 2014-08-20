@@ -1,8 +1,12 @@
 package dk.statsbiblioteket.newspaper.roundtripapprover;
 
+import dk.statsbiblioteket.medieplatform.autonomous.ConfigConstants;
+import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorage;
+import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorageFactory;
 import dk.statsbiblioteket.medieplatform.autonomous.SBOIDomsAutonomousComponentUtils;
 import dk.statsbiblioteket.medieplatform.autonomous.CallResult;
 import dk.statsbiblioteket.medieplatform.autonomous.RunnableComponent;
+import dk.statsbiblioteket.newspaper.mfpakintegration.MfPakThenSBOIAutonomousComponentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,12 +41,18 @@ public class RoundtripApproverExecutable {
         log.info("Starting with args {}", args);
 
         //Parse the args to a properties construct
-        Properties properties = SBOIDomsAutonomousComponentUtils.parseArgs(args);
+        Properties properties = MfPakThenSBOIAutonomousComponentUtils.parseArgs(args);
+
+        DomsEventStorageFactory domsEventStorageFactory = new DomsEventStorageFactory();
+        domsEventStorageFactory.setFedoraLocation(properties.getProperty(ConfigConstants.DOMS_URL));
+        domsEventStorageFactory.setUsername(properties.getProperty(ConfigConstants.DOMS_USERNAME));
+        domsEventStorageFactory.setPassword(properties.getProperty(ConfigConstants.DOMS_PASSWORD));
+        DomsEventStorage domsEventStorage = domsEventStorageFactory.createDomsEventStorage();
 
         //make a new runnable component from the properties
-        RunnableComponent component = new RoundtripApproverComponent(properties);
+        RunnableComponent component = new RoundtripApproverComponent(properties, domsEventStorage);
 
-        CallResult result = SBOIDomsAutonomousComponentUtils.startAutonomousComponent(properties, component);
+        CallResult result = MfPakThenSBOIAutonomousComponentUtils.startAutonomousComponent(properties, component);
         log.info(result.toString());
         return result.containsFailures();
     }

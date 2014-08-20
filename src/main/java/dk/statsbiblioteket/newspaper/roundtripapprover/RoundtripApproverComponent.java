@@ -20,12 +20,15 @@ import java.util.Properties;
  */
 public class RoundtripApproverComponent extends TreeProcessorAbstractRunnableComponent {
 
+    private DomsEventStorage domsEventStorage;
+
     private Logger log = LoggerFactory.getLogger(getClass());
 
     public static String ROUNDTRIP_APPROVED_EVENT = "Roundtrip_Approved";
 
-    protected RoundtripApproverComponent(Properties properties) {
+    protected RoundtripApproverComponent(Properties properties, DomsEventStorage domsEventStorage) {
         super(properties);
+        this.domsEventStorage = domsEventStorage;
     }
 
     @Override
@@ -36,12 +39,6 @@ public class RoundtripApproverComponent extends TreeProcessorAbstractRunnableCom
     @Override
     public void doWorkOnBatch(Batch batch, ResultCollector resultCollector) throws Exception {
         log.info("Checking approval for '{}'", batch.getFullID());
-        Properties properties = getProperties();
-        DomsEventStorageFactory domsEventStorageFactory = new DomsEventStorageFactory();
-        domsEventStorageFactory.setFedoraLocation(properties.getProperty(ConfigConstants.DOMS_URL));
-        domsEventStorageFactory.setUsername(properties.getProperty(ConfigConstants.DOMS_USERNAME));
-        domsEventStorageFactory.setPassword(properties.getProperty(ConfigConstants.DOMS_PASSWORD));
-        DomsEventStorage domsEventStorage = domsEventStorageFactory.createDomsEventStorage();
         List<Batch> allRoundTrips = domsEventStorage.getAllRoundTrips(batch.getBatchID());
         int maxQaFlagged = getMaxRoundtripQAFlagged(allRoundTrips);
         if (batch.getRoundTripNumber() == maxQaFlagged) {
@@ -58,7 +55,7 @@ public class RoundtripApproverComponent extends TreeProcessorAbstractRunnableCom
                     "Round trip is preceded by an earlier round trip (RT" + maxQaFlagged + ") which has been approved.");
             domsEventStorage.addEventToBatch(batch.getBatchID(), batch.getRoundTripNumber(), getClass().getSimpleName(),
                     new Date(),
-                    "An earlier Roundtrip for this batch has already been approved.", "Manually_Stopped", true);
+                    "An earlier Roundtrip for this batch has already been approved.", "Manually_stopped", true);
         }
     }
 

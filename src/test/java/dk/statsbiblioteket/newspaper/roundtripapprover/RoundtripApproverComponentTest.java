@@ -8,11 +8,17 @@ import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorageFactory;
 import dk.statsbiblioteket.medieplatform.autonomous.Event;
 import dk.statsbiblioteket.medieplatform.autonomous.ResultCollector;
 import org.testng.annotations.Test;
+import static org.mockito.Mockito.*;
+
 
 import java.io.FileInputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -20,75 +26,64 @@ import static org.testng.Assert.assertTrue;
 public class RoundtripApproverComponentTest {
 
     /**
-     * Create a test setup with a batch with round trips 1,2,4,5 where
-     * 1,2,4 are flagged for manual QA and 5 is not.
-     * Set all as mfpak approved then call the component on each in turn.
-     * Numbers 1,2 and should be set as "Approved=failed"
-     * Number 4 as "Approved" and
-     * Number 5 as "Manually Stopped"
-     *
+     * Verify that the expected external DOMS calls are made by this component. We have a batch with roundtrip
+     * numbers 1,2,4,5 which has been approved in mfpak. Roundtrips 1,2,4 have been flagged for manual QA. We
+     * process the roundtrips sequentially. A failure is added to the result collector for each of roundtrips 1,2,5 .
+     * Also roundtrip 5 adds a Manually_stopped event.
      * @throws Exception
      */
-    @Test(groups = {"externalTest"})
+    @Test
     public void testDoWorkOnBatch() throws Exception {
         String pathToProperties = System.getProperty("integration.test.newspaper.properties");
         Properties props = new Properties();
         props.load(new FileInputStream(pathToProperties));
 
-        DomsEventStorageFactory factory = new DomsEventStorageFactory();
-        factory.setFedoraLocation(props.getProperty(ConfigConstants.DOMS_URL));
-        factory.setUsername(props.getProperty(ConfigConstants.DOMS_USERNAME));
-        factory.setPassword(props.getProperty(ConfigConstants.DOMS_PASSWORD));
-        factory.setPidGeneratorLocation(props.getProperty(ConfigConstants.DOMS_PIDGENERATOR_URL));
-
-        DomsEventStorage domsEventStorage = factory.createDomsEventStorage();
-
         String batchId = getRandomBatchId();
+        Batch rt1 = new Batch(batchId, 1);
+        Batch rt2 = new Batch(batchId, 2);
+        Batch rt4 = new Batch(batchId, 4);
+        Batch rt5 = new Batch(batchId, 5);
+        List<Batch>  roundtrips = Arrays.asList(new Batch[]{rt1,rt2,rt4,rt5});
+
         String dataReceived = "Data_Received";
-        String manualQAFlagged = "Manual_QA_Flagged";
-        String mfpakApproved = "Approved";
-        String details = "Details here";
+               String manualQAFlagged = "Manual_QA_Flagged";
+               String mfpakApproved = "Approved";
+        Event dataReceivedEvent = new Event();
+        dataReceivedEvent.setEventID(dataReceived);
+        Event manualQAEvent = new Event();
+        manualQAEvent.setEventID(manualQAFlagged);
+        Event mfpakApprovedEvent = new Event();
+        mfpakApprovedEvent.setEventID(mfpakApproved);
 
-        domsEventStorage.addEventToBatch(batchId, 1, "agent", new Date(), details, dataReceived, true);
-        domsEventStorage.addEventToBatch(batchId, 1, "agent", new Date(), details, manualQAFlagged, true);
-        domsEventStorage.addEventToBatch(batchId, 1, "agent", new Date(), details, mfpakApproved, true);
-        domsEventStorage.addEventToBatch(batchId, 4, "agent", new Date(), details, dataReceived, true);
-        domsEventStorage.addEventToBatch(batchId, 4, "agent", new Date(), details, manualQAFlagged, true);
-        domsEventStorage.addEventToBatch(batchId, 4, "agent", new Date(), details, mfpakApproved, true);
-        domsEventStorage.addEventToBatch(batchId, 2, "agent", new Date(), details, dataReceived, true);
-        domsEventStorage.addEventToBatch(batchId, 2, "agent", new Date(), details, manualQAFlagged, true);
-        domsEventStorage.addEventToBatch(batchId, 2, "agent", new Date(), details, mfpakApproved, true);
-        domsEventStorage.addEventToBatch(batchId, 5, "agent", new Date(), details, dataReceived, true);
-        domsEventStorage.addEventToBatch(batchId, 5, "agent", new Date(), details, mfpakApproved, true);
+        List<Event> allEvents = Arrays.asList(dataReceivedEvent, manualQAEvent, mfpakApprovedEvent);
+        List<Event> notFlaggedEvents = Arrays.asList(dataReceivedEvent, mfpakApprovedEvent);
 
-        Batch batch = domsEventStorage.getBatch(batchId, 1);
+        rt1.setEventList(allEvents);
+        rt2.setEventList(allEvents);
+        rt4.setEventList(allEvents);
+        rt5.setEventList(notFlaggedEvents);
+
+        DomsEventStorage domsEventStorage = mock(DomsEventStorage.class);
+        when(domsEventStorage.getAllRoundTrips(anyString())).thenReturn(roundtrips);
+
+
         ResultCollector resultCollector = new ResultCollector("foo", "bar", null);
-        RoundtripApproverComponent component = new RoundtripApproverComponent(props);
-        component.doWorkOnBatch(batch, resultCollector);
-        assertFalse(resultCollector.isSuccess());
-        batch = domsEventStorage.getBatch(batchId, 2);
-        resultCollector = new ResultCollector("foo", "bar", null);
-        component.doWorkOnBatch(batch, resultCollector);
-        assertFalse(resultCollector.isSuccess());
-        batch = domsEventStorage.getBatch(batchId, 4);
-        resultCollector = new ResultCollector("foo", "bar", null);
-        component.doWorkOnBatch(batch, resultCollector);
-        assertTrue(resultCollector.isSuccess());
-        batch = domsEventStorage.getBatch(batchId, 5);
-        resultCollector = new ResultCollector("foo", "bar", null);
-        component.doWorkOnBatch(batch, resultCollector);
-        assertFalse(resultCollector.isSuccess());
-        Batch roundtrip5 = domsEventStorage.getBatch(batchId, 5);
-        boolean isStopped = false;
-        for (Event event: roundtrip5.getEventList()) {
-             if (event.getEventID().equals("Manually_Stopped")) {
-                 isStopped = true;
-             }
-        }
-        assertTrue(isStopped, "Should have found a Manually_Stopped event.");
+        RoundtripApproverComponent component = new RoundtripApproverComponent(props, domsEventStorage);
+        component.doWorkOnBatch(rt1, resultCollector);
+        verify(domsEventStorage).getAllRoundTrips(batchId);
+        assertEquals(resultCollector.toReport().split("exception").length, 2);  //1 exception
+        component.doWorkOnBatch(rt2, resultCollector);
+        assertEquals(resultCollector.toReport().split("exception").length, 3);  //2 exceptions
+        component.doWorkOnBatch(rt4, resultCollector);
+        assertEquals(resultCollector.toReport().split("exception").length, 3);  //no new exceptions
+        verify(domsEventStorage, never()).addEventToBatch(anyString(), anyInt(), anyString(), any(Date.class), anyString(), anyString(), anyBoolean());
+        component.doWorkOnBatch(rt5, resultCollector);
+        assertEquals(resultCollector.toReport().split("exception").length, 4);  //3 exceptions
+        //Verify that an event has been added. This is the Manually_stopped event.
+        verify(domsEventStorage).addEventToBatch(eq(batchId), eq(5), anyString(), any(Date.class), anyString(), eq("Manually_stopped"), eq(true));
     }
 
     private String getRandomBatchId() {
-        return "4000220252" + Math.round(Math.random() * 100);
+        return "4000220" + Math.round(Math.random() * 100000);
     }
 }
