@@ -32,7 +32,7 @@ public class RoundtripApproverComponentTest {
      * Also roundtrip 5 adds a Manually_stopped event.
      * @throws Exception
      */
-    @Test
+    @Test(groups = "integrationTest")
     public void testDoWorkOnBatch() throws Exception {
         String pathToProperties = System.getProperty("integration.test.newspaper.properties");
         Properties props = new Properties();

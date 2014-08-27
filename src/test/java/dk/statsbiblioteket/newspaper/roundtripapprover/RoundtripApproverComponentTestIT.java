@@ -15,11 +15,13 @@ import dk.statsbiblioteket.medieplatform.autonomous.Event;
 import dk.statsbiblioteket.medieplatform.autonomous.IDFormatter;
 import dk.statsbiblioteket.medieplatform.autonomous.NewspaperIDFormatter;
 import dk.statsbiblioteket.medieplatform.autonomous.ResultCollector;
+
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import javax.xml.bind.JAXBException;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Date;
@@ -32,17 +34,19 @@ import static org.testng.Assert.assertTrue;
 
 public class RoundtripApproverComponentTestIT {
 
-    private Properties props;
+    private final Properties props = new Properties();
     private String batchId = "1337";
     private DomsEventStorage domsEventStorage;
 
-
-    @AfterMethod
-    @BeforeMethod
-    public void purgeBatch() throws IOException, JAXBException, PIDGeneratorException, BackendInvalidCredsException, BackendMethodFailedException, BackendInvalidResourceException {
+    @BeforeMethod(alwaysRun = true)
+    private void loadConfiguration() throws Exception {
         String pathToProperties = System.getProperty("integration.test.newspaper.properties");
-        props = new Properties();
         props.load(new FileInputStream(pathToProperties));
+        purgeBatch();
+    }
+    
+    @AfterMethod
+    public void purgeBatch() throws IOException, JAXBException, PIDGeneratorException, BackendInvalidCredsException, BackendMethodFailedException, BackendInvalidResourceException {
         Credentials creds = new Credentials(props.getProperty(ConfigConstants.DOMS_USERNAME), props.getProperty(ConfigConstants.DOMS_PASSWORD));
         EnhancedFedoraImpl fedora = new EnhancedFedoraImpl(
                 creds, props.getProperty(ConfigConstants.DOMS_URL).replaceFirst("/(objects)?/?$", ""), "", null);
@@ -71,7 +75,7 @@ public class RoundtripApproverComponentTestIT {
         *
         * @throws Exception
         */
-       @Test(groups = {"externalTest"})
+       @Test(groups = {"externalTest", "integrationTest"})
        public void testDoWorkOnBatchIT() throws Exception {
            String dataReceived = "Data_Received";
            String manualQAFlagged = "Manual_QA_Flagged";
