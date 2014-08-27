@@ -64,22 +64,22 @@
         <dependency>
             <groupId>dk.statsbiblioteket.newspaper</groupId>
             <artifactId>sboi-doms-event-framework</artifactId>
-            <version>1.10-SNAPSHOT</version>
+            <version>1.10</version>
         </dependency>
         <dependency>
             <groupId>dk.statsbiblioteket.newspaper</groupId>
             <artifactId>sboi-doms-autonomous-component</artifactId>
-            <version>1.10-SNAPSHOT</version>
+            <version>1.10</version>
         </dependency>
         <dependency>
             <groupId>dk.statsbiblioteket.newspaper</groupId>
             <artifactId>tree-processor-runnable-component</artifactId>
-            <version>1.10-SNAPSHOT</version>
+            <version>1.10</version>
         </dependency>
         <dependency>
             <groupId>dk.statsbiblioteket.newspaper</groupId>
             <artifactId>newspaper-mfpak-integration</artifactId>
-            <version>1.10-SNAPSHOT</version>
+            <version>1.10</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>
