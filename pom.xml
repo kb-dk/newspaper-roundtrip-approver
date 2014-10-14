@@ -63,23 +63,19 @@
 
         <dependency>
             <groupId>dk.statsbiblioteket.newspaper</groupId>
-            <artifactId>sboi-doms-event-framework</artifactId>
-            <version>1.10</version>
+            <artifactId>newspaper-batch-event-framework-common</artifactId>
+            <version>1.12-SNAPSHOT</version>
         </dependency>
-        <dependency>
-            <groupId>dk.statsbiblioteket.newspaper</groupId>
-            <artifactId>sboi-doms-autonomous-component</artifactId>
-            <version>1.10</version>
-        </dependency>
+
         <dependency>
             <groupId>dk.statsbiblioteket.newspaper</groupId>
             <artifactId>tree-processor-runnable-component</artifactId>
-            <version>1.10</version>
+            <version>1.12-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>dk.statsbiblioteket.newspaper</groupId>
             <artifactId>newspaper-mfpak-integration</artifactId>
-            <version>1.10</version>
+            <version>1.11-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>

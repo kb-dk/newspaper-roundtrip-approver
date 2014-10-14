@@ -6,6 +6,7 @@ import dk.statsbiblioteket.medieplatform.autonomous.ConfigConstants;
 import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorage;
 import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorageFactory;
 import dk.statsbiblioteket.medieplatform.autonomous.Event;
+import dk.statsbiblioteket.medieplatform.autonomous.NewspaperDomsEventStorage;
 import dk.statsbiblioteket.medieplatform.autonomous.ResultCollector;
 import org.testng.annotations.Test;
 import static org.mockito.Mockito.*;
@@ -33,7 +34,7 @@ public class RoundtripApproverComponentTest {
      * @throws Exception
      */
     @Test(groups = "integrationTest")
-    public void testDoWorkOnBatch() throws Exception {
+    public void testdoWorkOnItem() throws Exception {
         String pathToProperties = System.getProperty("integration.test.newspaper.properties");
         Properties props = new Properties();
         props.load(new FileInputStream(pathToProperties));
@@ -63,24 +64,24 @@ public class RoundtripApproverComponentTest {
         rt4.setEventList(allEvents);
         rt5.setEventList(notFlaggedEvents);
 
-        DomsEventStorage domsEventStorage = mock(DomsEventStorage.class);
+        NewspaperDomsEventStorage domsEventStorage = mock(NewspaperDomsEventStorage.class);
         when(domsEventStorage.getAllRoundTrips(anyString())).thenReturn(roundtrips);
 
 
         ResultCollector resultCollector = new ResultCollector("foo", "bar", null);
         RoundtripApproverComponent component = new RoundtripApproverComponent(props, domsEventStorage);
-        component.doWorkOnBatch(rt1, resultCollector);
+        component.doWorkOnItem(rt1, resultCollector);
         verify(domsEventStorage).getAllRoundTrips(batchId);
         assertEquals(resultCollector.toReport().split("exception").length, 2);  //1 exception
-        component.doWorkOnBatch(rt2, resultCollector);
+        component.doWorkOnItem(rt2, resultCollector);
         assertEquals(resultCollector.toReport().split("exception").length, 3);  //2 exceptions
-        component.doWorkOnBatch(rt4, resultCollector);
+        component.doWorkOnItem(rt4, resultCollector);
         assertEquals(resultCollector.toReport().split("exception").length, 3);  //no new exceptions
-        verify(domsEventStorage, never()).addEventToBatch(anyString(), anyInt(), anyString(), any(Date.class), anyString(), anyString(), anyBoolean());
-        component.doWorkOnBatch(rt5, resultCollector);
+        verify(domsEventStorage, never()).addEventToItem(any(Batch.class), anyString(), any(Date.class), anyString(), anyString(), anyBoolean());
+        component.doWorkOnItem(rt5, resultCollector);
         assertEquals(resultCollector.toReport().split("exception").length, 4);  //3 exceptions
         //Verify that an event has been added. This is the Manually_stopped event.
-        verify(domsEventStorage).addEventToBatch(eq(batchId), eq(5), anyString(), any(Date.class), anyString(), eq("Manually_stopped"), eq(true));
+        verify(domsEventStorage).addEventToItem(eq(rt5), anyString(), any(Date.class), anyString(), eq("Manually_stopped"), eq(true));
     }
 
     private String getRandomBatchId() {

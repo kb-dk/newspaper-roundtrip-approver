@@ -5,6 +5,7 @@ import dk.statsbiblioteket.medieplatform.autonomous.ConfigConstants;
 import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorage;
 import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorageFactory;
 import dk.statsbiblioteket.medieplatform.autonomous.Event;
+import dk.statsbiblioteket.medieplatform.autonomous.NewspaperDomsEventStorage;
 import dk.statsbiblioteket.medieplatform.autonomous.ResultCollector;
 import dk.statsbiblioteket.medieplatform.autonomous.TreeProcessorAbstractRunnableComponent;
 import org.slf4j.Logger;
@@ -20,13 +21,13 @@ import java.util.Properties;
  */
 public class RoundtripApproverComponent extends TreeProcessorAbstractRunnableComponent {
 
-    private DomsEventStorage domsEventStorage;
+    private NewspaperDomsEventStorage domsEventStorage;
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
     public static String ROUNDTRIP_APPROVED_EVENT = "Roundtrip_Approved";
 
-    protected RoundtripApproverComponent(Properties properties, DomsEventStorage domsEventStorage) {
+    protected RoundtripApproverComponent(Properties properties, NewspaperDomsEventStorage domsEventStorage) {
         super(properties);
         this.domsEventStorage = domsEventStorage;
     }
@@ -37,7 +38,7 @@ public class RoundtripApproverComponent extends TreeProcessorAbstractRunnableCom
     }
 
     @Override
-    public void doWorkOnBatch(Batch batch, ResultCollector resultCollector) throws Exception {
+    public void doWorkOnItem(Batch batch, ResultCollector resultCollector) throws Exception {
         log.info("Checking approval for '{}'", batch.getFullID());
         List<Batch> allRoundTrips = domsEventStorage.getAllRoundTrips(batch.getBatchID());
         int maxQaFlagged = getMaxRoundtripQAFlagged(allRoundTrips);
@@ -53,9 +54,12 @@ public class RoundtripApproverComponent extends TreeProcessorAbstractRunnableCom
                     "exception",
                     getClass().getSimpleName(),
                     "Round trip is preceded by an earlier round trip (RT" + maxQaFlagged + ") which has been approved.");
-            domsEventStorage.addEventToBatch(batch.getBatchID(), batch.getRoundTripNumber(), getClass().getSimpleName(),
-                    new Date(),
-                    "An earlier Roundtrip for this batch has already been approved.", "Manually_stopped", true);
+            domsEventStorage.addEventToItem(batch,
+                                                   getClass().getSimpleName(),
+                                                   new Date(),
+                                                   "An earlier Roundtrip for this batch has already been approved.",
+                                                   "Manually_stopped",
+                                                   true);
         }
     }
 

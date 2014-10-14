@@ -3,8 +3,10 @@ package dk.statsbiblioteket.newspaper.roundtripapprover;
 import dk.statsbiblioteket.medieplatform.autonomous.ConfigConstants;
 import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorage;
 import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorageFactory;
-import dk.statsbiblioteket.medieplatform.autonomous.SBOIDomsAutonomousComponentUtils;
+import dk.statsbiblioteket.medieplatform.autonomous.NewspaperBatchAutonomousComponentUtils;
 import dk.statsbiblioteket.medieplatform.autonomous.CallResult;
+import dk.statsbiblioteket.medieplatform.autonomous.NewspaperDomsEventStorage;
+import dk.statsbiblioteket.medieplatform.autonomous.NewspaperDomsEventStorageFactory;
 import dk.statsbiblioteket.medieplatform.autonomous.RunnableComponent;
 import dk.statsbiblioteket.newspaper.mfpakintegration.MfPakThenSBOIAutonomousComponentUtils;
 import org.slf4j.Logger;
@@ -24,7 +26,7 @@ public class RoundtripApproverExecutable {
      * @param args the arguments.
      *
      * @throws Exception
-     * @see SBOIDomsAutonomousComponentUtils#parseArgs(String[])
+     *NewspaperBatchAutonomousComponentUtilstUtils#parseArgs(String[])
      */
     public static void main(String... args) throws Exception {
         System.exit(doMain(args));
@@ -35,7 +37,7 @@ public class RoundtripApproverExecutable {
      * @param args the arguments.
      *
      * @throws Exception
-     * @see SBOIDomsAutonomousComponentUtils#parseArgs(String[])
+NewspaperBatchAutonomousComponentUtilsmponentUtils#parseArgs(String[])
      */
     private static int doMain(String[] args) throws Exception {
         log.info("Starting with args {}", args);
@@ -43,11 +45,11 @@ public class RoundtripApproverExecutable {
         //Parse the args to a properties construct
         Properties properties = MfPakThenSBOIAutonomousComponentUtils.parseArgs(args);
 
-        DomsEventStorageFactory domsEventStorageFactory = new DomsEventStorageFactory();
+        NewspaperDomsEventStorageFactory domsEventStorageFactory = new NewspaperDomsEventStorageFactory();
         domsEventStorageFactory.setFedoraLocation(properties.getProperty(ConfigConstants.DOMS_URL));
         domsEventStorageFactory.setUsername(properties.getProperty(ConfigConstants.DOMS_USERNAME));
         domsEventStorageFactory.setPassword(properties.getProperty(ConfigConstants.DOMS_PASSWORD));
-        DomsEventStorage domsEventStorage = domsEventStorageFactory.createDomsEventStorage();
+        NewspaperDomsEventStorage domsEventStorage = domsEventStorageFactory.createDomsEventStorage();
 
         //make a new runnable component from the properties
         RunnableComponent component = new RoundtripApproverComponent(properties, domsEventStorage);
