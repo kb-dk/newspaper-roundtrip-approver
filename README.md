@@ -17,5 +17,5 @@ Configuration
 The component uses only standard configuration parameters. Event parameters should be set as follows:
 
      autonomous.pastSuccessfulEvents=MFPak_Approved
-     autonomous.pastFailedEvents=
+     autonomous.oldEvents=
      autonomous.futureEvents=Approved
