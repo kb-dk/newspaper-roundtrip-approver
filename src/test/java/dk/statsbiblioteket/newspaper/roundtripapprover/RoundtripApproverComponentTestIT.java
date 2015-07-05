@@ -6,7 +6,7 @@ import dk.statsbiblioteket.doms.central.connectors.BackendMethodFailedException;
 import dk.statsbiblioteket.doms.central.connectors.EnhancedFedora;
 import dk.statsbiblioteket.doms.central.connectors.EnhancedFedoraImpl;
 import dk.statsbiblioteket.doms.central.connectors.fedora.pidGenerator.PIDGeneratorException;
-import dk.statsbiblioteket.doms.webservices.authentication.Credentials;
+import dk.statsbiblioteket.sbutil.webservices.authentication.Credentials;
 import dk.statsbiblioteket.medieplatform.autonomous.Batch;
 import dk.statsbiblioteket.medieplatform.autonomous.ConfigConstants;
 import dk.statsbiblioteket.medieplatform.autonomous.DomsEventStorage;
@@ -86,17 +86,17 @@ public class RoundtripApproverComponentTestIT {
            Batch batch5 = new Batch(batchId, 5);
            Batch batch2 = new Batch(batchId, 2);
 
-           domsEventStorage.addEventToItem(batch1, "agent", new Date(), details, dataReceived, true);
-           domsEventStorage.addEventToItem(batch1, "agent", new Date(), details, manualQAFlagged, true);
-           domsEventStorage.addEventToItem(batch1, "agent", new Date(), details, mfpakApproved, true);
-           domsEventStorage.addEventToItem(batch4, "agent", new Date(), details, dataReceived, true);
-           domsEventStorage.addEventToItem(batch4, "agent", new Date(), details, manualQAFlagged, true);
-           domsEventStorage.addEventToItem(batch4, "agent", new Date(), details, mfpakApproved, true);
-           domsEventStorage.addEventToItem(batch2, "agent", new Date(), details, dataReceived, true);
-           domsEventStorage.addEventToItem(batch2, "agent", new Date(), details, manualQAFlagged, true);
-           domsEventStorage.addEventToItem(batch2, "agent", new Date(), details, mfpakApproved, true);
-           domsEventStorage.addEventToItem(batch5, "agent", new Date(), details, dataReceived, true);
-           domsEventStorage.addEventToItem(batch5, "agent", new Date(), details, mfpakApproved, true);
+           domsEventStorage.appendEventToItem(batch1, "agent", new Date(), details, dataReceived, true);
+           domsEventStorage.appendEventToItem(batch1, "agent", new Date(), details, manualQAFlagged, true);
+           domsEventStorage.appendEventToItem(batch1, "agent", new Date(), details, mfpakApproved, true);
+           domsEventStorage.appendEventToItem(batch4, "agent", new Date(), details, dataReceived, true);
+           domsEventStorage.appendEventToItem(batch4, "agent", new Date(), details, manualQAFlagged, true);
+           domsEventStorage.appendEventToItem(batch4, "agent", new Date(), details, mfpakApproved, true);
+           domsEventStorage.appendEventToItem(batch2, "agent", new Date(), details, dataReceived, true);
+           domsEventStorage.appendEventToItem(batch2, "agent", new Date(), details, manualQAFlagged, true);
+           domsEventStorage.appendEventToItem(batch2, "agent", new Date(), details, mfpakApproved, true);
+           domsEventStorage.appendEventToItem(batch5, "agent", new Date(), details, dataReceived, true);
+           domsEventStorage.appendEventToItem(batch5, "agent", new Date(), details, mfpakApproved, true);
 
            Batch batch = domsEventStorage.getItemFromFullID(batch1.getFullID());
            ResultCollector resultCollector = new ResultCollector("foo", "bar", null);

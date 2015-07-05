@@ -77,11 +77,11 @@ public class RoundtripApproverComponentTest {
         assertEquals(resultCollector.toReport().split("exception").length, 3);  //2 exceptions
         component.doWorkOnItem(rt4, resultCollector);
         assertEquals(resultCollector.toReport().split("exception").length, 3);  //no new exceptions
-        verify(domsEventStorage, never()).addEventToItem(any(Batch.class), anyString(), any(Date.class), anyString(), anyString(), anyBoolean());
+        verify(domsEventStorage, never()).appendEventToItem(any(Batch.class), anyString(), any(Date.class), anyString(), anyString(), anyBoolean());
         component.doWorkOnItem(rt5, resultCollector);
         assertEquals(resultCollector.toReport().split("exception").length, 4);  //3 exceptions
         //Verify that an event has been added. This is the Manually_stopped event.
-        verify(domsEventStorage).addEventToItem(eq(rt5), anyString(), any(Date.class), anyString(), eq("Manually_stopped"), eq(true));
+        verify(domsEventStorage).appendEventToItem(eq(rt5), anyString(), any(Date.class), anyString(), eq("Manually_stopped"), eq(true));
     }
 
     private String getRandomBatchId() {
