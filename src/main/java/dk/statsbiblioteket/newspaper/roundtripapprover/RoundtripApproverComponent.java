@@ -54,7 +54,7 @@ public class RoundtripApproverComponent extends TreeProcessorAbstractRunnableCom
                     "exception",
                     getClass().getSimpleName(),
                     "Round trip is preceded by an earlier round trip (RT" + maxQaFlagged + ") which has been approved.");
-            domsEventStorage.addEventToItem(batch,
+            domsEventStorage.appendEventToItem(batch,
                                                    getClass().getSimpleName(),
                                                    new Date(),
                                                    "An earlier Roundtrip for this batch has already been approved.",
